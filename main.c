@@ -1,8 +1,7 @@
 #include "plugboard.h"
+#include "rotors.h"
 
 #include <stdio.h>
-
-void readplgbrd(char *plgbrdconf, char *input, char *outbuffer);
 
 // IMPOSE A INPUT CHARACTER LIMIT FOR INPUT TEXT AS strlen() returns type size_t
 // and size_t -> int type conversion is unsafe above 32bit integer limit
@@ -13,13 +12,18 @@ int main(int argc, char **argv) {
   }
 
   Plugboard pb = {0};
-  PlugboardError err = parse_plugboard("AB CD EF GH IJ KL MN OP QR ST", &pb);
-  if (err == PLUGBOARD_OK)
-    print_plugboard(&pb);
 
-  char input[] = "HELLO THERE";
-  encrypt_plugboard(&pb, input);
+  int rotorsetup[] = {0, 0, 0};
+  int rotorcount = 3;
+  char test = 'A';
+  printf("Rotor setup before: {%i, %i, %i}\n", rotorsetup[0], rotorsetup[1],
+         rotorsetup[2]);
+  encrypt_rotors(rotorsetup, rotorcount, &test);
+  printf("%c\n", test);
+  encrypt_rotors(rotorsetup, rotorcount, &test);
+  printf("%c\n", test);
+  printf("Rotor setup after: {%i, %i, %i}\n", rotorsetup[0], rotorsetup[1],
+         rotorsetup[2]);
 
-  printf("%s\n", input);
   return 0;
 }
