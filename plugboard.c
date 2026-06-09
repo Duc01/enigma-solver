@@ -1,7 +1,7 @@
 #include "plugboard.h"
-#include <string.h>
 
 #include <stdio.h>
+#include <string.h>
 
 PlugboardError parse_plugboard(const char *input, Plugboard *pb) {
   if (!input || !pb) {
@@ -14,7 +14,7 @@ PlugboardError parse_plugboard(const char *input, Plugboard *pb) {
     pb->wiredchars[i] = (char)('A' + i);
   }
 
-  for (int i = 0, j = 0; i < strlen(input); i++) {
+  for (int i = 0, j = 0; i < (int)strlen(input); i++) {
     if (input[i] == 32)
       continue;
 
@@ -46,4 +46,21 @@ void print_plugboard(Plugboard *pb) {
     printf("%c%c ", pb->pairs[i].a, pb->pairs[i].b);
   }
   printf("\n}\n");
+}
+
+void encrypt_plugboard(Plugboard *pb, char *input) {
+  if (!pb)
+    return;
+
+  // size_t inputlen = strlen(input);
+  // char *buffer = malloc(inputlen);
+  for (int i = 0; i < (int)strlen(input); i++) {
+    if (input[i] == 32)
+      continue;
+    if (input[i] >= 97 && input[i] <= 122)
+      input[i] -= 32;
+    // replace each character in input with character at the input[i] - 'A'
+    // position of pb->wiredchars
+    input[i] = pb->wiredchars[input[i] - 'A'];
+  }
 }

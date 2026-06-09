@@ -25,6 +25,9 @@ typedef enum {
 } PlugboardError;
 
 PlugboardError parse_plugboard(const char *input, Plugboard *pb);
+
 void print_plugboard(Plugboard *pb);
+
+void encrypt_plugboard(Plugboard *pb, char *input);
 
 #endif /* PLUGBOARD_H */
