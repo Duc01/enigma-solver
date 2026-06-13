@@ -28,51 +28,44 @@ const int ROTORCONFIGS[5][26] = {
 const int REFLECTORCONFIG[] = {24, 17, 20, 7, 16, 18, 11, 3, 15, 23, 13, 6, 14,
                                10, 12, 8,  4, 1,  5,  25, 2, 22, 21, 9,  0, 19};
 
-char encode_char(char input, int rotoroffsets[], int activerotors[],
+void encode_char(char *input, int rotoroffsets[], int activerotors[],
                  int rotorcount) {
 
-  input = iteraterotors(rotoroffsets, input, true, activerotors, rotorcount);
+  iteraterotors(rotoroffsets, input, true, activerotors, rotorcount);
 
   increment_rotors(rotoroffsets, rotorcount);
-  reflector(&input);
-  input = iteraterotors(rotoroffsets, input, false, activerotors, rotorcount);
-
-  // Add reflector
-  // Add backwards rotor pass
-  return input;
+  reflector(input);
+  iteraterotors(rotoroffsets, input, false, activerotors, rotorcount);
 }
 
 // TODO: Check function with other enigma machines
-char runthrough(int rotoroffset, char input, bool forward, int activerotor) {
-  input = input - 65;
+void runthrough(int rotoroffset, char *input, bool forward, int activerotor) {
+  *input = (*input) - 65;
   int rotorconf[26];
   memcpy(rotorconf, ROTORCONFIGS[activerotor], sizeof(rotorconf));
   if (forward == true) {
-    input = (input + rotoroffset) % 26;
-    return (char)(65 + rotorconf[(unsigned char)input]);
+    *input = (*input + rotoroffset) % 26;
+    *input = (65 + rotorconf[(int)*input]);
   } else {
     for (int i = 0; i < 26; i++) {
-      if (input == rotorconf[i]) {
+      if (*input == rotorconf[i]) {
         int output = i - rotoroffset;
         while (output < 0) {
           output = 26 + output;
         }
         output = output % 26;
 
-        return (char)(65 + output);
+        *input = (65 + output);
       }
     }
   }
-
-  return '?'; // just here to make the compiler shut up
 }
 
-char iteraterotors(int rotoroffsets[], char input, bool forward,
+void iteraterotors(int rotoroffsets[], char *input, bool forward,
                    int activerotors[], int rotorcount) {
   for (int i = 0; i < rotorcount; i++) {
-    input = runthrough(rotoroffsets[i], input, forward, activerotors[i]);
+    runthrough(rotoroffsets[i], input, forward, activerotors[i]);
   }
-  return input;
 }
 
 void increment_rotors(int rotoroffsets[], int rotorcount) {
@@ -91,8 +84,6 @@ void increment_rotors(int rotoroffsets[], int rotorcount) {
 void reflector(char *input) {
   if (*input >= 65 && *input <= 90) {
     (*input) = 65 + REFLECTORCONFIG[65 - (*input)];
-  } else if (*input >= 97 && *input <= 122) {
-    *input = 97 + REFLECTORCONFIG[97 - (*input)];
   } else {
     *input = '?';
   }

@@ -3,10 +3,10 @@
 
 void increment_rotors(int rotoroffsets[], int rotorcount);
 
-char runthrough(int rotoroffset, char input, bool forward, int activerotor);
-char iteraterotors(int rotoroffsets[], char input, bool forward,
+void runthrough(int rotoroffset, char *input, bool forward, int activerotor);
+void iteraterotors(int rotoroffsets[], char *input, bool forward,
                    int activerotors[], int rotorcount);
-char encode_char(char input, int rotoroffsets[], int activerotors[],
+void encode_char(char *input, int rotoroffsets[], int activerotors[],
                  int rotorcount);
 
 void reflector(char *input);

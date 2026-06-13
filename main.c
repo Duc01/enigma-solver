@@ -10,6 +10,7 @@ int main(int argc, char **argv) {
     fprintf(stderr, "Usage: [%s] filename.txt", argv[0]);
     return 1;
   }
+  // TODO: Impose limitation of only uppercase characters
 
   // Plugboard pb = {0};
 
@@ -18,10 +19,11 @@ int main(int argc, char **argv) {
   int rotorcount = 3;
   char input = 'A';
   printf("Original char: %c\n", input);
-  printf("Rotor offsets: {%d, %d, %d}", rotoroffsets[0], rotoroffsets[1],
+  printf("Rotor offsets: {%d, %d, %d}\n", rotoroffsets[0], rotoroffsets[1],
          rotoroffsets[2]);
-  printf("AFter rotor manipulation: %c\n",
-         encode_char(input, rotoroffsets, rotorsetup, rotorcount));
+
+  encode_char(&input, rotoroffsets, rotorsetup, rotorcount);
+  printf("AFter rotor manipulation: %c\n", input);
   printf("Later rotor offset: {%d, %d, %d}\n", rotoroffsets[0], rotoroffsets[1],
          rotoroffsets[2]);
 
