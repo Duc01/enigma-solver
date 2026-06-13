@@ -1,7 +1,7 @@
-#include "plugboard.h"
-#include "rotors.h"
-
+#include <stdbool.h>
 #include <stdio.h>
+
+#include "rotors.h"
 
 // IMPOSE A INPUT CHARACTER LIMIT FOR INPUT TEXT AS strlen() returns type size_t
 // and size_t -> int type conversion is unsafe above 32bit integer limit
@@ -11,19 +11,19 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  Plugboard pb = {0};
+  // Plugboard pb = {0};
 
-  int rotorsetup[] = {0, 0, 0};
+  int rotorsetup[] = {0, 1, 2};
+  int rotoroffsets[] = {0, 0, 0};
   int rotorcount = 3;
-  char test = 'A';
-  printf("Rotor setup before: {%i, %i, %i}\n", rotorsetup[0], rotorsetup[1],
-         rotorsetup[2]);
-  encrypt_rotors(rotorsetup, rotorcount, &test);
-  printf("%c\n", test);
-  encrypt_rotors(rotorsetup, rotorcount, &test);
-  printf("%c\n", test);
-  printf("Rotor setup after: {%i, %i, %i}\n", rotorsetup[0], rotorsetup[1],
-         rotorsetup[2]);
+  char input = 'A';
+  printf("Original char: %c\n", input);
+  printf("Rotor offsets: {%d, %d, %d}", rotoroffsets[0], rotoroffsets[1],
+         rotoroffsets[2]);
+  printf("AFter rotor manipulation: %c\n",
+         encode_char(input, rotoroffsets, rotorsetup, rotorcount));
+  printf("Later rotor offset: {%d, %d, %d}\n", rotoroffsets[0], rotoroffsets[1],
+         rotoroffsets[2]);
 
   return 0;
 }
