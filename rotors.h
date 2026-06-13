@@ -1,12 +1,12 @@
 #ifndef ROTORS_H
 #define ROTORS_H
 
-void increment_rotors(int rotoroffsets[], int rotorcount);
+void increment_rotors(int rotoroffsets[], int ringoffsets[], int activerotors[], int rotorcount);
 
-void runthrough(int rotoroffset, char *input, bool forward, int activerotor);
-void iteraterotors(int rotoroffsets[], char *input, bool forward,
+void runthrough(int rotoroffset, int ringoffset, char *input, bool forward, int activerotor);
+void iteraterotors(int rotoroffsets[], int ringoffsets[], char *input, bool forward,
                    int activerotors[], int rotorcount);
-void encode_char(char *input, int rotoroffsets[], int activerotors[],
+void encode_char(char *input, int rotoroffsets[], int ringoffsets[], int activerotors[],
                  int rotorcount);
 
 void reflector(char *input);

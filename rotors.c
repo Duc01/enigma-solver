@@ -28,28 +28,39 @@ const int ROTORCONFIGS[5][26] = {
 const int REFLECTORCONFIG[] = {24, 17, 20, 7, 16, 18, 11, 3, 15, 23, 13, 6, 14,
                                10, 12, 8,  4, 1,  5,  25, 2, 22, 21, 9,  0, 19};
 
-void encode_char(char *input, int rotoroffsets[], int activerotors[],
-                 int rotorcount) {
+// Notch positions for rotors 0-4 (where the stepping occurs)
+const int ROTORNOTCHES[5] = {16, 4, 21, 9, 25};
 
-  iteraterotors(rotoroffsets, input, true, activerotors, rotorcount);
+void encode_char(char *input, int rotoroffsets[], int ringoffsets[],
+                 int activerotors[], int rotorcount) {
+  for (int i = 0; i < (int)strlen(input); i++) {
+    increment_rotors(rotoroffsets, ringoffsets, activerotors, rotorcount);
 
-  increment_rotors(rotoroffsets, rotorcount);
-  reflector(input);
-  iteraterotors(rotoroffsets, input, false, activerotors, rotorcount);
+    iteraterotors(rotoroffsets, ringoffsets, &input[i], true, activerotors,
+                  rotorcount);
+
+    reflector(&input[i]);
+
+    iteraterotors(rotoroffsets, ringoffsets, &input[i], false, activerotors,
+                  rotorcount);
+  }
 }
 
 // TODO: Check function with other enigma machines
-void runthrough(int rotoroffset, char *input, bool forward, int activerotor) {
+void runthrough(int rotoroffset, int ringoffset, char *input, bool forward,
+                int activerotor) {
   *input = (*input) - 65;
   int rotorconf[26];
   memcpy(rotorconf, ROTORCONFIGS[activerotor], sizeof(rotorconf));
+  // Apply ring offset to both the input and rotor offset
+  int adjustedOffset = (rotoroffset - ringoffset + 26) % 26;
   if (forward == true) {
-    *input = (*input + rotoroffset) % 26;
+    *input = (*input + adjustedOffset) % 26;
     *input = (65 + rotorconf[(int)*input]);
   } else {
     for (int i = 0; i < 26; i++) {
       if (*input == rotorconf[i]) {
-        int output = i - rotoroffset;
+        int output = i - adjustedOffset;
         while (output < 0) {
           output = 26 + output;
         }
@@ -61,29 +72,50 @@ void runthrough(int rotoroffset, char *input, bool forward, int activerotor) {
   }
 }
 
-void iteraterotors(int rotoroffsets[], char *input, bool forward,
-                   int activerotors[], int rotorcount) {
-  for (int i = 0; i < rotorcount; i++) {
-    runthrough(rotoroffsets[i], input, forward, activerotors[i]);
+void iteraterotors(int rotoroffsets[], int ringoffsets[], char *input,
+                   bool forward, int activerotors[], int rotorcount) {
+  if (forward) {
+    // Forward pass: go through rotors in order
+    for (int i = 0; i < rotorcount; i++) {
+      runthrough(rotoroffsets[i], ringoffsets[i], input, forward,
+                 activerotors[i]);
+    }
+  } else {
+    // Backward pass: go through rotors in reverse order
+    for (int i = rotorcount - 1; i >= 0; i--) {
+      runthrough(rotoroffsets[i], ringoffsets[i], input, forward,
+                 activerotors[i]);
+    }
   }
 }
 
-void increment_rotors(int rotoroffsets[], int rotorcount) {
-  for (int i = 0; i < rotorcount; i++) {
-    if (rotoroffsets[i] == 25) {
-      rotoroffsets[i] = 0;
-      if (i + 1 == rotorcount)
-        rotoroffsets[i + 1]++;
-    } else {
-      rotoroffsets[i]++;
-      break;
+void increment_rotors(int rotoroffsets[], int ringoffsets[], int activerotors[],
+                      int rotorcount) {
+  // First, advance the rightmost (fast) rotor
+  rotoroffsets[0]++;
+  if (rotoroffsets[0] >= 26) {
+    rotoroffsets[0] = 0;
+  }
+
+  // Check for stepping based on notch positions adjusted by ring settings
+  for (int i = 0; i < rotorcount - 1; i++) {
+    // Notch position adjusted by ring setting
+    int adjustedNotch =
+        (ROTORNOTCHES[activerotors[i]] - ringoffsets[i] + 26) % 26;
+
+    // If current rotor position equals adjusted notch, step the next rotor
+    if (rotoroffsets[i] == adjustedNotch) {
+      rotoroffsets[i + 1]++;
+      if (rotoroffsets[i + 1] >= 26) {
+        rotoroffsets[i + 1] = 0;
+      }
     }
   }
 }
 
 void reflector(char *input) {
   if (*input >= 65 && *input <= 90) {
-    (*input) = 65 + REFLECTORCONFIG[65 - (*input)];
+    (*input) = 65 + REFLECTORCONFIG[(*input) - 65];
   } else {
     *input = '?';
   }
