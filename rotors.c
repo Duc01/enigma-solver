@@ -25,44 +25,6 @@ const int ROTORCONFIGS[5][26] = {
         3, 25, 17, 0, 12, 4,  22, 13, 8, 20, 24, 6,  21,
     }};
 
-// void encrypt_rotors(int rotorconf[], int rotorcount, char *input) {
-//   if (!((*input >= 65 && *input <= 90) || (*input >= 97 && *input <= 122)))
-//     return;
-//   *input += rotorconf[0];
-//   increment_rotor(rotorconf, rotorcount);
-//
-//   int iterarr[rotorcount - 1];
-//   for (int i = 1; i < rotorcount; i++) {
-//     iterarr[i - 1] = rotorconf[i];
-//   }
-//   if (rotorcount == 1)
-//     return;
-//
-//   int iterarrlen = sizeof(iterarr) / sizeof(int);
-//   encrypt_rotors(iterarr, iterarrlen, input);
-// }
-//
-// // TODO: Function should increment next rotor in sequence by one when
-// previous
-// // one completes one revolution
-// void increment_rotor(int rotorconf[], int rotorcount) {
-//   for (int i = 0; i < rotorcount; i++) {
-//     if (rotorconf[i] == 25) {
-//       rotorconf[i] = 0;
-//       if (i + 1 != rotorcount)
-//         rotorconf[i + 1]++;
-//     } else
-//       rotorconf[i]++;
-//   }
-//   return;
-// }
-//
-// void encrypt_str(int rotorconf[], int rotorcount, char *input) {
-//   for (int i = 0; input[i] != '\0'; i++) {
-//     encrypt_rotors(rotorconf, rotorcount, &input[i]);
-//   }
-// }
-
 char encode_char(char input, int rotoroffsets[], int activerotors[],
                  int rotorcount) {
   increment_rotors(rotoroffsets, rotorcount);
