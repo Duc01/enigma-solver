@@ -25,16 +25,23 @@ const int ROTORCONFIGS[5][26] = {
         3, 25, 17, 0, 12, 4,  22, 13, 8, 20, 24, 6,  21,
     }};
 
+const int REFLECTORCONFIG[] = {24, 17, 20, 7, 16, 18, 11, 3, 15, 23, 13, 6, 14,
+                               10, 12, 8,  4, 1,  5,  25, 2, 22, 21, 9,  0, 19};
+
 char encode_char(char input, int rotoroffsets[], int activerotors[],
                  int rotorcount) {
-  increment_rotors(rotoroffsets, rotorcount);
 
   input = iteraterotors(rotoroffsets, input, true, activerotors, rotorcount);
+
+  increment_rotors(rotoroffsets, rotorcount);
+  reflector(&input);
+  input = iteraterotors(rotoroffsets, input, false, activerotors, rotorcount);
 
   // Add reflector
   // Add backwards rotor pass
   return input;
 }
+
 // TODO: Check function with other enigma machines
 char runthrough(int rotoroffset, char input, bool forward, int activerotor) {
   input = input - 65;
@@ -78,5 +85,15 @@ void increment_rotors(int rotoroffsets[], int rotorcount) {
       rotoroffsets[i]++;
       break;
     }
+  }
+}
+
+void reflector(char *input) {
+  if (*input >= 65 && *input <= 90) {
+    (*input) = 65 + REFLECTORCONFIG[65 - (*input)];
+  } else if (*input >= 97 && *input <= 122) {
+    *input = 97 + REFLECTORCONFIG[97 - (*input)];
+  } else {
+    *input = '?';
   }
 }

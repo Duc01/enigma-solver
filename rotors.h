@@ -8,4 +8,7 @@ char iteraterotors(int rotoroffsets[], char input, bool forward,
                    int activerotors[], int rotorcount);
 char encode_char(char input, int rotoroffsets[], int activerotors[],
                  int rotorcount);
+
+void reflector(char *input);
+
 #endif /* ROTORS_H */
