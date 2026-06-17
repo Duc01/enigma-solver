@@ -13,7 +13,7 @@ typedef struct {
 typedef struct {
   Pair pairs[TOTAL_PAIRS];
   char joint[PLUGBOARD_LEN + 1];
-  char wiredchars[26];
+  char wiredchars[27];
 } Plugboard;
 
 typedef enum {

@@ -1,7 +1,40 @@
+#include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 
+#include "plugboard.h"
 #include "rotors.h"
+
+void getsettings(char *filepath, Plugboard *pb) {
+  FILE *file = fopen(filepath, "r");
+  if (file != NULL) {
+    char buf;
+    char plugboardinput[29];
+    int i = 0;
+    while (fread(&buf, sizeof(char), 1, file)) {
+      if (!((buf >= 'A' && buf <= 'Z') || buf == ' ' || buf == '\r' ||
+            buf == '\n')) {
+        fprintf(
+            stderr,
+            "Plugboard at %s must contain only uppercase english characters\n",
+            filepath);
+        fclose(file);
+        return;
+      } else {
+        plugboardinput[i] = buf;
+        i++;
+      }
+    }
+    plugboardinput[i] = '\0';
+
+    printf("%s\n", plugboardinput);
+    parse_plugboard(plugboardinput, pb);
+    fclose(file);
+  } else {
+    perror("Incorrect path");
+  }
+}
 
 // IMPOSE A INPUT CHARACTER LIMIT FOR INPUT TEXT AS strlen() returns type size_t
 // and size_t -> int type conversion is unsafe above 32bit integer limit
@@ -11,25 +44,13 @@ int main(int argc, char **argv) {
     return 1;
   }
   // TODO: Impose limitation of only uppercase characters
+  Plugboard *pb = &(Plugboard){0};
+  getsettings(argv[1], pb);
+  printf("%s\n", pb->wiredchars);
 
-  // Plugboard pb = {0};
-
-  int rotorsetup[] = {0, 1, 2};
-  int rotoroffsets[] = {0, 0, 0};
-  int ringoffsets[] = {0, 0, 0};
-  int rotorcount = 3;
-  char input[] = "GDXVL";
-  printf("Original str: %s\n", input);
-  printf("Rotor offsets: {%d, %d, %d}\n", rotoroffsets[0], rotoroffsets[1],
-         rotoroffsets[2]);
-  printf("Ring offsets: {%d, %d, %d}\n", ringoffsets[0], ringoffsets[1],
-         ringoffsets[2]);
-
-  encode_char(input, rotoroffsets, ringoffsets, rotorsetup, rotorcount);
-  printf("AFter rotor manipulation: %s\n", input);
-  printf("Later rotor offset: {%d, %d, %d}\n", rotoroffsets[0], rotoroffsets[1],
-         rotoroffsets[2]);
-  printf("Later ring offset: {%d, %d, %d}\n", ringoffsets[0], ringoffsets[1],
-         ringoffsets[2]);
+  // int rotorsetup[] = {0, 1, 2};
+  // int rotoroffsets[] = {0, 0, 0};
+  // int ringoffsets[] = {0, 0, 0};
+  // int rotorcount = 3;
   return 0;
 }

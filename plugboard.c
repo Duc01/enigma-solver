@@ -31,6 +31,7 @@ PlugboardError parse_plugboard(const char *input, Plugboard *pb) {
     pb->wiredchars[pb->pairs[i].a - 'A'] = pb->pairs[i].b;
   }
 
+  pb->wiredchars[26] = '\0';
   return PLUGBOARD_OK;
 }
 
