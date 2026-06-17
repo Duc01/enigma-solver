@@ -1,6 +1,6 @@
 # Variables
-CC = gcc
-CFLAGS = -Wall -Wextra -g
+CC = clang
+CFLAGS = -Wall -Wextra -g -O0
 TARGET = enigma
 
 # Phony targets to protect against files named 'all' or 'clean'
@@ -10,8 +10,8 @@ TARGET = enigma
 all: $(TARGET)
 
 # Rule to compile the executable
-$(TARGET): main.c
-	$(CC) $(CFLAGS) -o $(TARGET) main.c
+$(TARGET): main.c plugboard.c rotors.c
+	$(CC) $(CFLAGS) -o $(TARGET) main.c plugboard.c rotors.c
 
 # Rule to clean up build files
 clean:
