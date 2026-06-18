@@ -1,10 +1,21 @@
 #include <assert.h>
+#include <ctype.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 #include "plugboard.h"
 #include "rotors.h"
+
+char *trimstart(char *str) {
+  if (str == NULL)
+    return NULL;
+
+  while (isspace((unsigned char)*str)) {
+    str++; // Looks a bit unclean but idk dude
+  }
+  return str;
+}
 
 void parseinput(char *filepath, int rotorsetup[], int rotoroffsets[],
                 Plugboard *pb) {
@@ -17,12 +28,14 @@ void parseinput(char *filepath, int rotorsetup[], int rotoroffsets[],
   if (fgets(inputstr, sizeof(inputstr), file) == NULL) {
     perror("Couldn't read from file");
   }
-  sscanf(inputstr, "%d %d %d %d %d %d", &rotorsetup[0], &rotorsetup[1],
+  char *rotorcfgstr = trimstart(inputstr);
+
+  sscanf(rotorcfgstr, "%d %d %d %d %d %d", &rotorsetup[0], &rotorsetup[1],
          &rotorsetup[2], &rotoroffsets[0], &rotoroffsets[1], &rotoroffsets[2]);
 
   fclose(file);
   // 15
-  char *plugboardinput = &inputstr[15];
+  char *plugboardinput = &rotorcfgstr[15];
   parse_plugboard(plugboardinput, pb);
   print_plugboard(pb);
 }
