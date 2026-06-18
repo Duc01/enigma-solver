@@ -6,34 +6,25 @@
 #include "plugboard.h"
 #include "rotors.h"
 
-void getsettings(char *filepath, Plugboard *pb) {
+void parseinput(char *filepath, int rotorsetup[], int rotoroffsets[],
+                Plugboard *pb) {
   FILE *file = fopen(filepath, "r");
-  if (file != NULL) {
-    char buf;
-    char plugboardinput[29];
-    int i = 0;
-    while (fread(&buf, sizeof(char), 1, file)) {
-      if (!((buf >= 'A' && buf <= 'Z') || buf == ' ' || buf == '\r' ||
-            buf == '\n')) {
-        fprintf(
-            stderr,
-            "Plugboard at %s must contain only uppercase english characters\n",
-            filepath);
-        fclose(file);
-        return;
-      } else {
-        plugboardinput[i] = buf;
-        i++;
-      }
-    }
-    plugboardinput[i] = '\0';
-
-    printf("%s\n", plugboardinput);
-    parse_plugboard(plugboardinput, pb);
-    fclose(file);
-  } else {
-    perror("Incorrect path");
+  if (file == NULL) {
+    perror("Invalid file path");
   }
+  // TODO: Trim whitespace before handling string
+  char inputstr[100]; // arbitrary length
+  if (fgets(inputstr, sizeof(inputstr), file) == NULL) {
+    perror("Couldn't read from file");
+  }
+  sscanf(inputstr, "%d %d %d %d %d %d", &rotorsetup[0], &rotorsetup[1],
+         &rotorsetup[2], &rotoroffsets[0], &rotoroffsets[1], &rotoroffsets[2]);
+
+  fclose(file);
+  // 15
+  char *plugboardinput = &inputstr[15];
+  parse_plugboard(plugboardinput, pb);
+  print_plugboard(pb);
 }
 
 // IMPOSE A INPUT CHARACTER LIMIT FOR INPUT TEXT AS strlen() returns type size_t
@@ -44,13 +35,18 @@ int main(int argc, char **argv) {
     return 1;
   }
   // TODO: Impose limitation of only uppercase characters
-  Plugboard *pb = &(Plugboard){0};
-  getsettings(argv[1], pb);
-  printf("%s\n", pb->wiredchars);
 
-  // int rotorsetup[] = {0, 1, 2};
-  // int rotoroffsets[] = {0, 0, 0};
-  // int ringoffsets[] = {0, 0, 0};
-  // int rotorcount = 3;
+  Plugboard *pb = &(Plugboard){0};
+  // getsettings(argv[1], pb);
+  // printf("%s\n", pb->wiredchars);
+
+  int rotorsetup[] = {0, 0, 0};
+  int rotoroffsets[] = {0, 0, 0};
+  int ringoffsets[] = {0, 0, 0};
+  int rotorcount = 3;
+  parseinput(argv[1], rotorsetup, rotoroffsets, pb);
+  printf("{%d, %d, %d}\n{%d, %d, %d}\n", rotorsetup[0], rotorsetup[1],
+         rotorsetup[2], rotoroffsets[0], rotoroffsets[1], rotoroffsets[2]);
+
   return 0;
 }
