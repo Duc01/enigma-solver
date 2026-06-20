@@ -94,23 +94,35 @@ void iteraterotors(int rotoroffsets[], int ringoffsets[], char *input,
 
 void increment_rotors(int rotoroffsets[], int ringoffsets[], int activerotors[],
                       int rotorcount) {
-  rotoroffsets[0] = (rotoroffsets[0] + 1) % 26;
+  bool step_middle = false;
+  bool step_left = false;
 
+  // Check notch states BEFORE moving anything
   if (rotorcount > 1) {
     int rightnotch = (ROTORNOTCHES[activerotors[0]] - ringoffsets[0] + 26) % 26;
     if (rotoroffsets[0] == rightnotch) {
-      rotoroffsets[1] = (rotoroffsets[1] + 1) % 26;
-
-      // Double stepping
-      if (rotorcount > 2) {
-        int middlenotch =
-            (ROTORNOTCHES[activerotors[1]] - ringoffsets[1] + 26) % 26;
-        if (rotoroffsets[1] == middlenotch) {
-          rotoroffsets[1] = (rotoroffsets[1] + 1) % 26;
-          rotoroffsets[2] = (rotoroffsets[2] + 1) % 26;
-        }
-      }
+      step_middle = true;
     }
+  }
+
+  // Double stepping anomaly
+  if (rotorcount > 2) {
+    int middlenotch =
+        (ROTORNOTCHES[activerotors[1]] - ringoffsets[1] + 26) % 26;
+    if (rotoroffsets[1] == middlenotch) {
+      step_middle = true;
+      step_left = true;
+    }
+  }
+
+  rotoroffsets[0] = (rotoroffsets[0] + 1) % 26;
+
+  if (step_middle) {
+    rotoroffsets[1] = (rotoroffsets[1] + 1) % 26;
+  }
+
+  if (step_left) {
+    rotoroffsets[2] = (rotoroffsets[2] + 1) % 26;
   }
 }
 

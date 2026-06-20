@@ -10,8 +10,8 @@ TARGET = enigma
 all: $(TARGET)
 
 # Rule to compile the executable
-$(TARGET): main.c plugboard.c rotors.c
-	$(CC) $(CFLAGS) -o $(TARGET) main.c plugboard.c rotors.c
+$(TARGET): main.c plugboard.c rotors.c encode.c
+	$(CC) $(CFLAGS) -o $(TARGET) main.c plugboard.c rotors.c encode.c
 
 # Rule to clean up build files
 clean:
