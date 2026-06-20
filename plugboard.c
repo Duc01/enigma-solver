@@ -1,32 +1,43 @@
 #include "plugboard.h"
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 
 PlugboardError parse_plugboard(const char *input, Plugboard *pb) {
-  if (!input || !pb) {
-    fprintf(stderr, "Improper parameters for parse_plugboard function");
+  if (!input || !pb)
     return PLUGBOARD_ERR_NULL;
-  }
 
-  // pb->wiredchars initialised in alphabetical order
   for (int i = 0; i < 26; i++) {
     pb->wiredchars[i] = (char)('A' + i);
   }
 
-  for (int i = 0, j = 0; i < (int)strlen(input); i++) {
-    if (input[i] == 32)
+  int pair_count = 0;
+  bool parsing_second_letter = false;
+
+  for (int i = 0; i < (int)strlen(input); i++) {
+    char c = input[i];
+    if (c == ' ' || c == '\n' || c == '\r')
       continue;
 
-    if (pb->pairs[j].a <= 'Z' && pb->pairs[j].a >= 'A') {
-      pb->pairs[j].b = input[i];
-      j++;
+    if (c < 'A' || c > 'Z')
+      continue;
+
+    if (pair_count >= TOTAL_PAIRS)
+      break;
+
+    if (parsing_second_letter) {
+      pb->pairs[pair_count].b = c;
+      pair_count++;
+      parsing_second_letter = false;
     } else {
-      pb->pairs[j].a = input[i];
+      pb->pairs[pair_count].a = c;
+      parsing_second_letter = true;
     }
   }
 
-  for (int i = 0; i < TOTAL_PAIRS; i++) {
+  // Only wire up the pairs that were actually provided
+  for (int i = 0; i < pair_count; i++) {
     pb->wiredchars[pb->pairs[i].b - 'A'] = pb->pairs[i].a;
     pb->wiredchars[pb->pairs[i].a - 'A'] = pb->pairs[i].b;
   }
@@ -53,15 +64,14 @@ void encrypt_plugboard(Plugboard *pb, char *input) {
   if (!pb)
     return;
 
-  // size_t inputlen = strlen(input);
-  // char *buffer = malloc(inputlen);
   for (int i = 0; i < (int)strlen(input); i++) {
-    if (input[i] == 32)
-      continue;
-    if (input[i] >= 97 && input[i] <= 122)
+    // convert all applicable characters to uppercase
+    if (input[i] >= 'a' && input[i] <= 'z') {
       input[i] -= 32;
-    // replace each character in input with character at the input[i] - 'A'
-    // position of pb->wiredchars
-    input[i] = pb->wiredchars[input[i] - 'A'];
+    }
+
+    if (input[i] >= 'A' && input[i] <= 'Z') {
+      input[i] = pb->wiredchars[input[i] - 'A'];
+    }
   }
 }
