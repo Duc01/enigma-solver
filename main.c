@@ -1,8 +1,8 @@
-#include <assert.h>
 #include <ctype.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "plugboard.h"
 #include "rotors.h"
@@ -17,16 +17,35 @@ char *trimstart(char *str) {
   return str;
 }
 
-void parseinput(char *filepath, int rotorsetup[], int rotoroffsets[],
-                Plugboard *pb) {
+void parsetext(char *filepath, char *inputstr) {
+  FILE *file = fopen(filepath, "r");
+  if (file == NULL) {
+    perror("Can't find file text input file");
+    return;
+  }
+
+  char inputbuf[65535];
+  if (fgets(inputbuf, sizeof(inputbuf), file) == NULL) {
+    perror("Couldn't read from text file");
+    fclose(file);
+    return;
+  }
+  fclose(file);
+  char *trimmed = trimstart(inputbuf);
+  strcpy(inputstr, trimmed);
+}
+
+void parsesettings(char *filepath, int rotorsetup[], int rotoroffsets[],
+                   Plugboard *pb) {
   FILE *file = fopen(filepath, "r");
   if (file == NULL) {
     perror("Invalid file path");
+    return;
   }
-  // TODO: Trim whitespace before handling string
   char inputstr[100]; // arbitrary length
   if (fgets(inputstr, sizeof(inputstr), file) == NULL) {
     perror("Couldn't read from file");
+    return;
   }
   char *rotorcfgstr = trimstart(inputstr);
 
@@ -43,8 +62,8 @@ void parseinput(char *filepath, int rotorsetup[], int rotoroffsets[],
 // IMPOSE A INPUT CHARACTER LIMIT FOR INPUT TEXT AS strlen() returns type size_t
 // and size_t -> int type conversion is unsafe above 32bit integer limit
 int main(int argc, char **argv) {
-  if (argc == 1 || argc >= 3) {
-    fprintf(stderr, "Usage: [%s] filename.txt", argv[0]);
+  if (argc != 3) {
+    fprintf(stderr, "Usage: [%s] settingsfile.txt input.txt", argv[0]);
     return 1;
   }
   // TODO: Impose limitation of only uppercase characters
@@ -57,9 +76,13 @@ int main(int argc, char **argv) {
   int rotoroffsets[] = {0, 0, 0};
   int ringoffsets[] = {0, 0, 0};
   int rotorcount = 3;
-  parseinput(argv[1], rotorsetup, rotoroffsets, pb);
+  parsesettings(argv[1], rotorsetup, rotoroffsets, pb);
   printf("{%d, %d, %d}\n{%d, %d, %d}\n", rotorsetup[0], rotorsetup[1],
          rotorsetup[2], rotoroffsets[0], rotoroffsets[1], rotoroffsets[2]);
+
+  char inputstr[65535];
+  parsetext(argv[2], inputstr);
+  printf("%s\n", inputstr);
 
   return 0;
 }
