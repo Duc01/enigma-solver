@@ -18,14 +18,21 @@ int frequency(char target, const char *text) {
 }
 
 double indexofcoincidence(const char *text) {
-  int textlen = (int)strlen(text);
-  double coincidence = 0;
-  for (int i = 0; i < textlen; i++) {
-    double f = frequency(text[i], text);
-    coincidence += (f * (f - 1));
+  int textlen = 0;
+  int counts[26] = {0};
+  for (int i = 0; text[i] != '\0'; i++) {
+    if (text[i] >= 'A' && text[i] <= 'Z') {
+      counts[text[i] - 'A']++;
+      textlen++;
+    }
   }
-  coincidence /= (textlen * (textlen - 1));
-  // normalising score by dividing by length of the alphabet
+  if (textlen <= 1)
+    return 0.0;
+  double coincidence = 0;
+  for (int i = 0; i < 26; i++) {
+    coincidence += (double)counts[i] * (counts[i] - 1);
+  }
+  coincidence /= ((double)textlen * (textlen - 1));
   return coincidence;
 }
 
@@ -47,45 +54,49 @@ void fixrotors(rotorsetup possiblerotors[5], const char *ciphertext) {
     possiblerotors[i].score = -1e12;
   }
 
-  int choices[5] = {0, 1, 2, 3, 4};
   int temprings[3] = {0, 0, 0}; // rings held at zero while setting rotors
-  for (int i = 0; i < 5; i++) {
-    for (int j = 0; j < 5; j++) {
-      if (i == j)
+  for (int r0 = 0; r0 < 5; r0++) {
+    for (int r1 = 0; r1 < 5; r1++) {
+      if (r0 == r1)
         continue;
-      for (int k = 0; k < 5; k++) {
-        if (k == i || k == j)
+      for (int r2 = 0; r2 < 5; r2++) {
+        if (r2 == r0 || r2 == r1)
           continue;
-        int rotors[3] = {i, j, k};
+        int rotors[3] = {r0, r1, r2};
         printf("Trying: %d %d %d\n", rotors[0], rotors[1], rotors[2]);
+
+        char *input = malloc(strlen(ciphertext) + 1);
+        if (input == NULL)
+          return;
 
         for (int a = 0; a < 26; a++) {
           for (int b = 0; b < 26; b++) {
             for (int c = 0; c < 26; c++) {
               int currentoffsets[3] = {a, b, c};
-              char *input = malloc(strlen(ciphertext) + 1);
-              if (input == NULL)
-                return;
 
               strcpy(input, ciphertext);
               encode_char(input, currentoffsets, temprings, rotors, 3);
               double fit = indexofcoincidence(input);
-              free(input);
 
-              // looping over possible rotors to replace worse scores
-              for (int i = 0; i < 5; i++) {
-                if (possiblerotors[i].score < fit) {
-                  possiblerotors[i].score = fit;
-                  memcpy(possiblerotors[i].rotor, rotors,
-                         sizeof(possiblerotors[i].rotor));
-                  memcpy(possiblerotors[i].offsets, currentoffsets,
-                         sizeof(possiblerotors[i].offsets));
+              // insert into sorted top 5 array
+              for (int idx = 0; idx < 5; idx++) {
+                if (fit > possiblerotors[idx].score) {
+                  // Shift elements down
+                  for (int l = 4; l > idx; l--) {
+                    possiblerotors[l] = possiblerotors[l - 1];
+                  }
+                  possiblerotors[idx].score = fit;
+                  memcpy(possiblerotors[idx].rotor, rotors,
+                         sizeof(possiblerotors[idx].rotor));
+                  memcpy(possiblerotors[idx].offsets, currentoffsets,
+                         sizeof(possiblerotors[idx].offsets));
                   break;
                 }
               }
             }
           }
         }
+        free(input);
         printf("Fit: %lf\n", possiblerotors[0].score);
       }
     }

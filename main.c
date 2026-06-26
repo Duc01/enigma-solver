@@ -9,6 +9,8 @@
 #include "rotors.h"
 #include "solver.h"
 
+#define MAX_INPUT_LEN 65535
+
 char *trimstart(char *str) {
   if (str == NULL)
     return NULL;
@@ -26,7 +28,7 @@ void parsetext(char *filepath, char *inputstr) {
     return;
   }
 
-  char inputbuf[65535];
+  char inputbuf[MAX_INPUT_LEN];
   if (fgets(inputbuf, sizeof(inputbuf), file) == NULL) {
     perror("Couldn't read from text file");
     fclose(file);
@@ -81,7 +83,7 @@ int main(int argc, char **argv) {
   // getsettings(argv[1], pb);
   // printf("%s\n", pb->wiredchars);
 
-  // int rotorsetup[] = {0, 0, 0};
+  // int rotorsetup[] = {0, 1, 4};
   // int rotoroffsets[] = {0, 0, 0};
   // int ringoffsets[] = {0, 0, 0};
   // int rotorcount = 3;
@@ -89,12 +91,19 @@ int main(int argc, char **argv) {
   // printf("{%d, %d, %d}\n{%d, %d, %d}\n", rotorsetup[0], rotorsetup[1],
   //        rotorsetup[2], rotoroffsets[0], rotoroffsets[1], rotoroffsets[2]);
   //
-  char inputstr[65535];
-  parsetext(argv[2], inputstr);
-  // encrypt_str(inputstr, rotoroffsets, ringoffsets, rotorsetup, rotorcount,
-  // pb);
-  double ioc = indexofcoincidence(inputstr);
-  printf("%s: %lf\n", inputstr, ioc);
+  char *ciphertext = malloc(MAX_INPUT_LEN);
+  parsetext(argv[2], ciphertext);
+  // fixrotors(rotorsetup, ciphertext)
+  rotorsetup possiblerotors[5] = {0};
+  fixrotors(possiblerotors, ciphertext);
+
+  // printf("{%d, %d, %d}\n", possiblerotors[0].rotor[0], rotorsetup[1],
+  //        rotorsetup[2]);
+  for (int i = 0; i < 5; i++) {
+    printf("{%d, %d, %d}\n", possiblerotors[i].rotor[0],
+           possiblerotors[i].rotor[1], possiblerotors[i].rotor[2]);
+  }
+  free(ciphertext);
 
   return 0;
 }
