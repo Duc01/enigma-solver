@@ -1,6 +1,6 @@
 # Variables
 CC = clang
-CFLAGS = -Wall -Wextra -g -O0
+CFLAGS = -Wall -Wextra -g -O3
 TARGET = enigma
 
 # Phony targets to protect against files named 'all' or 'clean'

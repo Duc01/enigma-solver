@@ -55,8 +55,7 @@ void encode_char(char *input, int rotoroffsets[], int ringoffsets[],
 void runthrough(int rotoroffset, int ringoffset, char *input, bool forward,
                 int activerotor) {
   int val = *input; // 0‑25
-  int rotorconf[26];
-  memcpy(rotorconf, ROTORCONFIGS[activerotor], sizeof(rotorconf));
+  const int *rotorconf = ROTORCONFIGS[activerotor];
 
   // Combined offset: rotor position minus ring setting (normalised)
   int adjustedOffset = (rotoroffset - ringoffset + 26) % 26;
