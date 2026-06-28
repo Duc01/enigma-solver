@@ -17,6 +17,8 @@ int frequency(char target, const char *text) {
   return f;
 }
 
+// TODO: Implement bigram/tigram scoring functions for the plugboard
+// IOC is too weak of a test for the plugboard to work properly
 double indexofcoincidence(const char *text) {
   int textlen = 0;
   int counts[26] = {0};
@@ -36,7 +38,7 @@ double indexofcoincidence(const char *text) {
   return coincidence;
 }
 
-void fixrotors(rotorsetup possiblerotors[5], const char *ciphertext) {
+void fixrotors(RotorSetup possiblerotors[5], const char *ciphertext) {
 
   // setting up possiblerotors before execution
   for (int i = 0; i < 5; i++) {
@@ -103,63 +105,59 @@ void fixrotors(rotorsetup possiblerotors[5], const char *ciphertext) {
   }
 }
 
-// void fixrotors(int rotorsetup[3], char *ciphertext) {
-//   double best_fitness = -1e12;
-//
-//   int rotoroffsets[3] = {0, 1, 2};
-//   int ringoffsets[3] = {0, 0, 0}; // held at zero during rotor search
-//   // activerotors == rotorsetup
-//   int rotorcount = 3;
-//
-//   int choices[5] = {0, 1, 2, 3, 4};
-//
-//   for (int i = 0; i < 5; i++) {
-//     for (int j = 0; j < 5; j++) {
-//       if (j == i)
-//         continue;
-//       for (int k = 0; k < 5; k++) {
-//         if (k == i || k == j)
-//           continue;
-//         int rotors[3] = {i, j, k};
-//         printf("Checking %d %d %d\n", i, j, k);
-//
-//         for (int a = 0; a < 26; a++) {
-//           for (int b = 0; b < 26; b++) {
-//             for (int c = 0; c < 26; c++) {
-//               int currentoffsets[3] = {a, b, c};
-//
-//               char *input = malloc(strlen(ciphertext) + 1);
-//               if (input == NULL) {
-//                 perror("Couldn't assign memory\n");
-//                 return;
-//               }
-//               strcpy(input, ciphertext);
-//
-//               // prefer using encode_char here instead of encrypt plugboard
-//               // because plugboard doesn't yet exist this shouldn't affect
-//               much encode_char(input, currentoffsets, ringoffsets, rotors,
-//                           rotorcount);
-//
-//               double fit = indexofcoincidence(input);
-//               free(input);
-//
-//               if (fit > best_fitness) {
-//                 best_fitness = fit;
-//                 memcpy(rotoroffsets, currentoffsets, sizeof(rotoroffsets));
-//                 // rotoroffsets[0] = a;
-//                 // rotoroffsets[1] = b;
-//                 // rotoroffsets[2] = c;
-//                 memcpy(rotorsetup, rotors, sizeof(rotorsetup));
-//                 // rotorsetup[0] = i;
-//                 // rotorsetup[1] = j;
-//                 // rotorsetup[2] = k;
-//               }
-//             }
-//           }
-//         }
-//       }
-//     }
-//   }
-// }
+void printplugs(PlugSetup plugs[], const int pluglen) {
+  for (int i = 0; i < pluglen; i++) {
+    printf("Pair: %c%c Score: %lf\n", plugs[i].plug.a, plugs[i].plug.b,
+           plugs[i].score);
+  }
+}
 
-// void fixplugs()
+void fixplugs(PlugSetup plugs[20], const char *ciphertext) {
+  // array of commonly used plugboard combinations
+  const char *ISTECKER[135] = {
+      "AE", "AI", "AN", "AR", "AS", "AX", "BE", "BI", "BN", "BR", "BS", "BX",
+      "CE", "CI", "CN", "CR", "CS", "CX", "DE", "DI", "DN", "DR", "DS", "DX",
+      "EF", "EG", "EH", "EI", "EJ", "EK", "EL", "EM", "EN", "EO", "EP", "EQ",
+      "ER", "ES", "ET", "EU", "EV", "EW", "EX", "EY", "EZ", "FI", "FN", "FR",
+      "FS", "FX", "GI", "GN", "GR", "GS", "GX", "HI", "HN", "HR", "HS", "HX",
+      "IJ", "IK", "IL", "IM", "IN", "IO", "IP", "IQ", "IR", "IS", "IT", "IU",
+      "IV", "IW", "IX", "IY", "IZ", "JN", "JR", "JS", "JX", "KN", "KR", "KS",
+      "KX", "LN", "LR", "LS", "LX", "MN", "MR", "MS", "MX", "NO", "NP", "NQ",
+      "NR", "NS", "NT", "NU", "NV", "NW", "NX", "NY", "NZ", "OR", "OS", "OX",
+      "PR", "PS", "PX", "QR", "QS", "QX", "RS", "RT", "RU", "RV", "RW", "RX",
+      "RY", "RZ", "ST", "SU", "SV", "SW", "SX", "SY", "SZ", "TX", "UX", "VX",
+      "WX", "XY", "XZ"};
+  for (int i = 0; i < 20; i++) {
+    plugs[i].plug.a = '\0';
+    plugs[i].plug.b = '\0';
+  }
+  const int steckerlen = sizeof(ISTECKER) / sizeof(ISTECKER[0]);
+  for (int i = 0; i < steckerlen; i++) {
+    char *temptext = malloc(strlen(ciphertext) + 1);
+    strcpy(temptext, ciphertext);
+    Plugboard pb = {0};
+    parse_plugboard(ISTECKER[i], &pb);
+    encrypt_plugboard(&pb, temptext);
+    double pairscore = indexofcoincidence(temptext);
+
+    for (int j = 0; j < 20; j++) {
+      if (plugs[j].plug.a == '\0' && plugs[j].plug.b == '\0') {
+        plugs[j].plug.a = ISTECKER[i][0];
+        plugs[j].plug.b = ISTECKER[i][1];
+        plugs[j].score = pairscore;
+        break;
+      } else if ((plugs[j].plug.a == '\0' && plugs[j].plug.b != '\0') ||
+                 (plugs[j].plug.a != '\0' && plugs[j].plug.b == '\0')) {
+        fprintf(stderr, "Error testing plugboard configurations");
+        return;
+      }
+      if (plugs[j].score < pairscore) {
+        plugs[j].plug.a = ISTECKER[i][0];
+        plugs[j].plug.b = ISTECKER[i][1];
+        plugs[j].score = pairscore;
+        break;
+      }
+    }
+  }
+  printplugs(plugs, 20);
+}

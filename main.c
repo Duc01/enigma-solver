@@ -78,31 +78,11 @@ int main(int argc, char **argv) {
     return 1;
   }
   // TODO: Impose limitation of only uppercase characters
-
-  Plugboard *pb = &(Plugboard){0};
-  // getsettings(argv[1], pb);
-  // printf("%s\n", pb->wiredchars);
-
-  // int rotorsetup[] = {0, 1, 4};
-  // int rotoroffsets[] = {0, 0, 0};
-  // int ringoffsets[] = {0, 0, 0};
-  // int rotorcount = 3;
-  // parsesettings(argv[1], rotorsetup, rotoroffsets, pb);
-  // printf("{%d, %d, %d}\n{%d, %d, %d}\n", rotorsetup[0], rotorsetup[1],
-  //        rotorsetup[2], rotoroffsets[0], rotoroffsets[1], rotoroffsets[2]);
-  //
   char *ciphertext = malloc(MAX_INPUT_LEN);
   parsetext(argv[2], ciphertext);
-  // fixrotors(rotorsetup, ciphertext)
-  rotorsetup possiblerotors[5] = {0};
-  fixrotors(possiblerotors, ciphertext);
-
-  // printf("{%d, %d, %d}\n", possiblerotors[0].rotor[0], rotorsetup[1],
-  //        rotorsetup[2]);
-  for (int i = 0; i < 5; i++) {
-    printf("{%d, %d, %d}\n", possiblerotors[i].rotor[0],
-           possiblerotors[i].rotor[1], possiblerotors[i].rotor[2]);
-  }
+  RotorSetup possiblerotors[5] = {{0}};
+  PlugSetup plugs[20] = {0};
+  fixplugs(plugs, ciphertext);
   free(ciphertext);
 
   return 0;
