@@ -159,5 +159,4 @@ void fixplugs(PlugSetup plugs[20], const char *ciphertext) {
       }
     }
   }
-  printplugs(plugs, 20);
 }

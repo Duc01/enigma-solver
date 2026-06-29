@@ -77,9 +77,23 @@ int main(int argc, char **argv) {
     fprintf(stderr, "Usage: [%s] settingsfile.txt input.txt", argv[0]);
     return 1;
   }
-  // TODO: Impose limitation of only uppercase characters
   char *ciphertext = malloc(MAX_INPUT_LEN);
   parsetext(argv[2], ciphertext);
+  const int CIPHERLEN = strlen(ciphertext);
+
+  for (int i = 0; i < CIPHERLEN; i++) {
+    if ((ciphertext[i] < 'A' || ciphertext[i] > 'Z') &&
+        (ciphertext[i] < 'a' || ciphertext[i] > 'z')) {
+      if (ciphertext[i] == '\r' || ciphertext[i] == '\n')
+        continue;
+      fprintf(stderr, "Input must contain only the english alphabet\n");
+      return 2;
+    }
+    if (ciphertext[i] >= 'a' && ciphertext[i] <= 'z')
+      ciphertext[i] -= 32;
+  }
+
+  printf("%s\n", ciphertext);
   RotorSetup possiblerotors[5] = {{0}};
   PlugSetup plugs[20] = {0};
   fixplugs(plugs, ciphertext);
