@@ -121,10 +121,10 @@ void printplugs(PlugSetup plugs[], const int pluglen) {
 
 // base-26 based hash function. Should be a perfectly flat distribution
 unsigned int ngramhash(const char *sample) {
-  unsigned int c0 = sample[0] - 'A';
-  unsigned int c1 = sample[1] - 'A';
-  unsigned int c2 = sample[2] - 'A';
-  return (c0 * 676) + (c1 * 26) + (c2 * 1);
+  unsigned int c0 = (sample[0] >= 'A' && sample[0] <= 'Z') ? sample[0] - 'A' : 0;
+  unsigned int c1 = (sample[1] >= 'A' && sample[1] <= 'Z') ? sample[1] - 'A' : 0;
+  unsigned int c2 = (sample[2] >= 'A' && sample[2] <= 'Z') ? sample[2] - 'A' : 0;
+  return (c0 * 676) + (c1 * 26) + c2;
 }
 
 static int load_trigram_freqs(const char *path) {
