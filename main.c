@@ -64,7 +64,6 @@ void parsesettings(char *filepath, int rotorsetup[], int rotoroffsets[],
   }
 
   fclose(file);
-  // 15
   char *plugboardinput = &rotorcfgstr[15];
   parse_plugboard(plugboardinput, pb);
   print_plugboard(pb);
@@ -94,9 +93,20 @@ int main(int argc, char **argv) {
   }
 
   printf("%s\n", ciphertext);
-  RotorSetup possiblerotors[5] = {{0}};
+  RotorSetup possiblerotors[5];
+  fixrotors(possiblerotors, ciphertext);
+  printf("\n--- TOP 5 ROTOR SETUPS FOUND BY SOLVER ---\n");
+  for (int i = 0; i < 5; i++) {
+    printf("Rank %d: Rotors: %d %d %d, Offsets: %d %d %d, Score: %lf\n", i + 1,
+           possiblerotors[i].rotor[0], possiblerotors[i].rotor[1],
+           possiblerotors[i].rotor[2], possiblerotors[i].offsets[0],
+           possiblerotors[i].offsets[1], possiblerotors[i].offsets[2],
+           possiblerotors[i].score);
+  }
+  printf("------------------------------------------\n");
+
   PlugSetup plugs[20] = {0};
-  fixplugs(plugs, ciphertext);
+  fixplugs(plugs, ciphertext, &possiblerotors[0]);
   free(ciphertext);
 
   return 0;

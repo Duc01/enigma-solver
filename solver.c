@@ -1,3 +1,4 @@
+#include <float.h>
 #include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -24,8 +25,6 @@ int frequency(char target, const char *text) {
   return f;
 }
 
-// TODO: Implement bigram/tigram scoring functions for the plugboard
-// IOC is too weak of a test for the plugboard to work properly
 double indexofcoincidence(const char *text) {
   int textlen = 0;
   int counts[26] = {0};
@@ -82,6 +81,7 @@ void fixrotors(RotorSetup possiblerotors[5], const char *ciphertext) {
           for (int b = 0; b < 26; b++) {
             for (int c = 0; c < 26; c++) {
               int currentoffsets[3] = {a, b, c};
+              int initial_offsets[3] = {a, b, c};
 
               strcpy(input, ciphertext);
               encode_char(input, currentoffsets, temprings, rotors, 3);
@@ -97,8 +97,12 @@ void fixrotors(RotorSetup possiblerotors[5], const char *ciphertext) {
                   possiblerotors[idx].score = fit;
                   memcpy(possiblerotors[idx].rotor, rotors,
                          sizeof(possiblerotors[idx].rotor));
-                  memcpy(possiblerotors[idx].offsets, currentoffsets,
-                         sizeof(possiblerotors[idx].offsets));
+                  possiblerotors[idx].offsets[0] =
+                      (initial_offsets[0] + 1) % 26;
+                  possiblerotors[idx].offsets[1] =
+                      (initial_offsets[1] + 1) % 26;
+                  possiblerotors[idx].offsets[2] =
+                      (initial_offsets[2] + 1) % 26;
                   break;
                 }
               }
@@ -106,8 +110,24 @@ void fixrotors(RotorSetup possiblerotors[5], const char *ciphertext) {
           }
         }
         free(input);
-        printf("Fit: %lf\n", possiblerotors[0].score);
       }
+    }
+  }
+  // flipping the offsets so they're compatible with other functions
+  //  all function expect a format where the left most rotor in the array is the
+  //  rightmost (or first) motor in the system
+  int old[3];
+  for (int i = 0; i < 5; i++) {
+    // Reverse offsets
+    memcpy(old, possiblerotors[i].offsets, sizeof(possiblerotors[i].offsets));
+    for (int j = 0; j < 3; j++) {
+      possiblerotors[i].offsets[j] = old[3 - j - 1];
+    }
+
+    // Reverse rotors
+    memcpy(old, possiblerotors[i].rotor, sizeof(possiblerotors[i].rotor));
+    for (int j = 0; j < 3; j++) {
+      possiblerotors[i].rotor[j] = old[3 - j - 1];
     }
   }
 }
@@ -121,9 +141,12 @@ void printplugs(PlugSetup plugs[], const int pluglen) {
 
 // base-26 based hash function. Should be a perfectly flat distribution
 unsigned int ngramhash(const char *sample) {
-  unsigned int c0 = (sample[0] >= 'A' && sample[0] <= 'Z') ? sample[0] - 'A' : 0;
-  unsigned int c1 = (sample[1] >= 'A' && sample[1] <= 'Z') ? sample[1] - 'A' : 0;
-  unsigned int c2 = (sample[2] >= 'A' && sample[2] <= 'Z') ? sample[2] - 'A' : 0;
+  unsigned int c0 =
+      (sample[0] >= 'A' && sample[0] <= 'Z') ? sample[0] - 'A' : 0;
+  unsigned int c1 =
+      (sample[1] >= 'A' && sample[1] <= 'Z') ? sample[1] - 'A' : 0;
+  unsigned int c2 =
+      (sample[2] >= 'A' && sample[2] <= 'Z') ? sample[2] - 'A' : 0;
   return (c0 * 676) + (c1 * 26) + c2;
 }
 
@@ -173,70 +196,92 @@ double scorengram(const char *text, const int textlen) {
   double sigma = 0;
   // Sliding window over every overlapping trigram: i, i+1, i+2.
   for (int i = 0; i + 2 < len; i++) {
-    unsigned int hash = ngramhash(&text[i]);
-    double p = str_freqs[hash];
-    sigma += log(p);
+    if (text[i] >= 'A' && text[i] <= 'Z' && text[i + 1] >= 'A' &&
+        text[i + 1] <= 'Z' && text[i + 2] >= 'A' && text[i + 2] <= 'Z') {
+      unsigned int hash = ngramhash(&text[i]);
+      double p = str_freqs[hash];
+      sigma += log(p);
+    }
   }
 
   return sigma;
 }
 
-void fixplugs(PlugSetup plugs[20], const char *ciphertext) {
-  // array of commonly used plugboard combinations
-  const char *ISTECKER[135] = {
-      "AE", "AI", "AN", "AR", "AS", "AX", "BE", "BI", "BN", "BR", "BS", "BX",
-      "CE", "CI", "CN", "CR", "CS", "CX", "DE", "DI", "DN", "DR", "DS", "DX",
-      "EF", "EG", "EH", "EI", "EJ", "EK", "EL", "EM", "EN", "EO", "EP", "EQ",
-      "ER", "ES", "ET", "EU", "EV", "EW", "EX", "EY", "EZ", "FI", "FN", "FR",
-      "FS", "FX", "GI", "GN", "GR", "GS", "GX", "HI", "HN", "HR", "HS", "HX",
-      "IJ", "IK", "IL", "IM", "IN", "IO", "IP", "IQ", "IR", "IS", "IT", "IU",
-      "IV", "IW", "IX", "IY", "IZ", "JN", "JR", "JS", "JX", "KN", "KR", "KS",
-      "KX", "LN", "LR", "LS", "LX", "MN", "MR", "MS", "MX", "NO", "NP", "NQ",
-      "NR", "NS", "NT", "NU", "NV", "NW", "NX", "NY", "NZ", "OR", "OS", "OX",
-      "PR", "PS", "PX", "QR", "QS", "QX", "RS", "RT", "RU", "RV", "RW", "RX",
-      "RY", "RZ", "ST", "SU", "SV", "SW", "SX", "SY", "SZ", "TX", "UX", "VX",
-      "WX", "XY", "XZ"};
-
+void fixplugs(PlugSetup plugs[20], const char *ciphertext,
+              RotorSetup *best_rotor) {
   for (int i = 0; i < 20; i++) {
     plugs[i].plug.a = '\0';
     plugs[i].plug.b = '\0';
-    plugs[i].score = 0;
+    plugs[i].score = DBL_MIN;
   }
 
-  const int steckerlen = sizeof(ISTECKER) / sizeof(ISTECKER[0]);
-  const int textlen = strlen(ciphertext); // doesn't change across the loop
+  const int textlen = strlen(ciphertext);
+  Plugboard current_pb;
+  parse_plugboard("", &current_pb);
 
-  for (int i = 0; i < steckerlen; i++) {
-    char *temptext = malloc(textlen + 1);
-    strcpy(temptext, ciphertext);
+  char found_plugs[27] = {0};
+  int found_count = 0;
 
-    Plugboard pb = {0};
-    parse_plugboard(ISTECKER[i], &pb);
-    encrypt_plugboard(&pb, temptext);
-    double pairscore = scorengram(temptext, textlen);
-    free(temptext);
+  for (int p = 0; p < 10; p++) {
+    char best_a = '\0';
+    char best_b = '\0';
+    double best_score = -1e12;
 
-    // Find where this candidate belongs in the sorted (best-first) top-20.
-    // A slot is "empty" if both letters are '\0'. We insert at the first
-    // position that is either empty or worse than the new candidate, then
-    // shift everything after it down by one, dropping the last entry.
-    int insert_idx = -1;
-    for (int j = 0; j < 20; j++) {
-      int slot_empty = (plugs[j].plug.a == '\0' && plugs[j].plug.b == '\0');
-      if (slot_empty || pairscore > plugs[j].score) {
-        insert_idx = j;
-        break;
+    for (char i = 'A'; i <= 'Z'; i++) {
+      if (strchr(found_plugs, i))
+        continue;
+
+      for (char j = i + 1; j <= 'Z'; j++) {
+        if (strchr(found_plugs, j))
+          continue;
+
+        Plugboard test_pb = current_pb;
+        test_pb.wiredchars[i - 'A'] = j;
+        test_pb.wiredchars[j - 'A'] = i;
+
+        char *temptext = malloc(textlen + 1);
+        if (temptext == NULL)
+          continue;
+        strcpy(temptext, ciphertext);
+
+        // Full decryption: pb * rotors * pb * ciphertext
+        encrypt_str(temptext, best_rotor->offsets, best_rotor->rings,
+                    best_rotor->rotor, 3, &test_pb);
+
+        double score = scorengram(temptext, textlen);
+        free(temptext);
+
+        if (score > best_score) {
+          best_score = score;
+          best_a = i;
+          best_b = j;
+        }
       }
     }
 
-    if (insert_idx != -1) {
-      for (int k = 19; k > insert_idx; k--) {
-        plugs[k] = plugs[k - 1];
-      }
-      plugs[insert_idx].plug.a = ISTECKER[i][0];
-      plugs[insert_idx].plug.b = ISTECKER[i][1];
-      plugs[insert_idx].score = pairscore;
+    if (best_a != '\0' && best_b != '\0') {
+      current_pb.wiredchars[best_a - 'A'] = best_b;
+      current_pb.wiredchars[best_b - 'A'] = best_a;
+      found_plugs[found_count++] = best_a;
+      found_plugs[found_count++] = best_b;
+      found_plugs[found_count] = '\0';
+
+      plugs[p].plug.a = best_a;
+      plugs[p].plug.b = best_b;
+      plugs[p].score = best_score;
+    } else {
+      break;
     }
   }
+
   printplugs(plugs, 20);
+
+  char *final_decrypted = malloc(textlen + 1);
+  if (final_decrypted != NULL) {
+    strcpy(final_decrypted, ciphertext);
+    encrypt_str(final_decrypted, best_rotor->offsets, best_rotor->rings,
+                best_rotor->rotor, 3, &current_pb);
+    printf("\nDecrypted Plaintext:\n%s\n\n", final_decrypted);
+    free(final_decrypted);
+  }
 }

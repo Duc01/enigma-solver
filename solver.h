@@ -21,6 +21,6 @@ typedef struct {
  */
 void fixrotors(RotorSetup possiblerotors[5], const char *ciphertext);
 
-void fixplugs(PlugSetup *plugs, const char *ciphertext);
+void fixplugs(PlugSetup plugs[20], const char *ciphertext, RotorSetup *best_rotor);
 
 #endif // SOLVER_H
