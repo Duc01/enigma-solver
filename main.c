@@ -92,22 +92,20 @@ int main(int argc, char **argv) {
       ciphertext[i] -= 32;
   }
 
-  printf("%s\n", ciphertext);
-  RotorSetup possiblerotors[5];
-  fixrotors(possiblerotors, ciphertext);
-  printf("\n--- TOP 5 ROTOR SETUPS FOUND BY SOLVER ---\n");
-  for (int i = 0; i < 5; i++) {
-    printf("Rank %d: Rotors: %d %d %d, Offsets: %d %d %d, Score: %lf\n", i + 1,
-           possiblerotors[i].rotor[0], possiblerotors[i].rotor[1],
-           possiblerotors[i].rotor[2], possiblerotors[i].offsets[0],
-           possiblerotors[i].offsets[1], possiblerotors[i].offsets[2],
-           possiblerotors[i].score);
-  }
-  printf("------------------------------------------\n");
+  Plugboard *pb = &(Plugboard){0};
 
-  PlugSetup plugs[20] = {0};
-  fixplugs(plugs, ciphertext, &possiblerotors[0]);
-  free(ciphertext);
+  int rotorsetup[] = {0, 0, 0};
+  int rotoroffsets[] = {0, 0, 0};
+  int ringoffsets[] = {0, 0, 0};
+  int rotorcount = 3;
+  parsesettings(argv[1], rotorsetup, rotoroffsets, pb);
+  printf("{%d, %d, %d}\n{%d, %d, %d}\n", rotorsetup[0], rotorsetup[1],
+         rotorsetup[2], rotoroffsets[0], rotoroffsets[1], rotoroffsets[2]);
+
+  char inputstr[65535];
+  parsetext(argv[2], inputstr);
+  encrypt_str(inputstr, rotoroffsets, ringoffsets, rotorsetup, rotorcount, pb);
+  printf("%s\n", inputstr);
 
   return 0;
 }
